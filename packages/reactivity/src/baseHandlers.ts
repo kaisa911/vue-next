@@ -87,32 +87,40 @@ function set(
   return result
 }
 
+// 删除属性
 function deleteProperty(target: any, key: string | symbol): boolean {
+  // 判断是否有该属性
   const hadKey = hasOwn(target, key)
   const oldValue = target[key]
   const result = Reflect.deleteProperty(target, key)
+  // 如果删除该属性并且有这个属性
   if (result && hadKey) {
     /* istanbul ignore else */
     if (__DEV__) {
+      // 在开发模式，添加更多的信息
       trigger(target, OperationTypes.DELETE, key, { oldValue })
     } else {
       trigger(target, OperationTypes.DELETE, key)
     }
   }
+  // 返回是否删除了该属性
   return result
 }
 
+// 判断是否有该属性的方法
+// 在 使用类似 prop in target时触发依赖处理
 function has(target: any, key: string | symbol): boolean {
   const result = Reflect.has(target, key)
   track(target, OperationTypes.HAS, key)
   return result
 }
 
+// 返回target的所有属性
 function ownKeys(target: any): (string | number | symbol)[] {
   track(target, OperationTypes.ITERATE)
   return Reflect.ownKeys(target)
 }
-// 可以编辑的处理方法
+// 可以编辑对象的handler
 export const mutableHandlers: ProxyHandler<any> = {
   get: createGetter(false),
   set,
@@ -120,10 +128,10 @@ export const mutableHandlers: ProxyHandler<any> = {
   has,
   ownKeys
 }
-// 只读的处理方法
+// 只读对象的handler
 export const readonlyHandlers: ProxyHandler<any> = {
   get: createGetter(true),
-
+  // readonly 的 proxy handlers， 和 mutableHandlers 不一样的地方在于当 LOCKED 为 true 会锁住操作并报warning
   set(target: any, key: string | symbol, value: any, receiver: any): boolean {
     if (LOCKED) {
       if (__DEV__) {
@@ -137,9 +145,10 @@ export const readonlyHandlers: ProxyHandler<any> = {
       return set(target, key, value, receiver)
     }
   },
-
+  // 删除属性
   deleteProperty(target: any, key: string | symbol): boolean {
     if (LOCKED) {
+      // 可以通过unlock来控制 LOCKED flag 来解锁 readonly 的操作
       if (__DEV__) {
         console.warn(
           `Delete operation on key "${String(
