@@ -33,7 +33,7 @@ export interface DebuggerEvent {
   key: string | symbol | undefined
 }
 
-export const activeReactiveEffectStack: ReactiveEffect[] = []
+export const activeReactiveEffectStack: ReactiveEffect[] = [] // actice的响应式副作用栈
 
 export const ITERATE_KEY = Symbol('iterate')
 
@@ -110,28 +110,34 @@ function cleanup(effect: ReactiveEffect) {
 }
 
 let shouldTrack = true
-
+// 暂停追踪
 export function pauseTracking() {
   shouldTrack = false
 }
-
+// 恢复追踪
 export function resumeTracking() {
   shouldTrack = true
 }
-
+/*
+  track追踪函数
+*/
 export function track(
-  target: any,
-  type: OperationTypes,
-  key?: string | symbol
+  target: any, // 目标
+  type: OperationTypes, // 操作
+  key?: string | symbol // 属性
 ) {
   if (!shouldTrack) {
     return
   }
+  // 取当前的副作用
   const effect = activeReactiveEffectStack[activeReactiveEffectStack.length - 1]
+  // 如果有副作用
   if (effect) {
+    // 如果type是ITERATE
     if (type === OperationTypes.ITERATE) {
       key = ITERATE_KEY
     }
+
     let depsMap = targetMap.get(target)
     if (depsMap === void 0) {
       targetMap.set(target, (depsMap = new Map()))

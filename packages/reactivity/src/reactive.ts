@@ -1,4 +1,4 @@
-import { isObject, toTypeString } from '@vue/shared'
+import { isObject, toTypeString } from '@vue/shared' // 两个方法，一个判断是否是对象，一个是判断类型的方法
 import { mutableHandlers, readonlyHandlers } from './baseHandlers'
 import {
   mutableCollectionHandlers,
@@ -122,7 +122,7 @@ export function isReactive(value: any): boolean {
 export function isReadonly(value: any): boolean {
   return readonlyToRaw.has(value)
 }
-
+// 将可响应数据转化为原始数据
 export function toRaw<T>(observed: T): T {
   return reactiveToRaw.get(observed) || readonlyToRaw.get(observed) || observed
 }
