@@ -7,28 +7,29 @@ import {
 import { ReactiveEffect } from './effect'
 import { UnwrapRef, Ref } from './ref'
 
-// The main WeakMap that stores {target -> key -> dep} connections.
-// Conceptually, it's easier to think of a dependency as a Dep class
-// which maintains a Set of subscribers, but we simply store them as
-// raw Sets to reduce memory overhead.
+// WeakMap 用爱储存 {target -> key -> dep } 的连接
+// 理论上，依赖关系用类来维护更容易，但是这样做可以减少内存的使用
 export type Dep = Set<ReactiveEffect>
 export type KeyToDepMap = Map<string | symbol, Dep>
 export const targetMap = new WeakMap<any, KeyToDepMap>()
 
-// WeakMaps that store {raw <-> observed} pairs.
-const rawToReactive = new WeakMap<any, any>()
-const reactiveToRaw = new WeakMap<any, any>()
-const rawToReadonly = new WeakMap<any, any>()
-const readonlyToRaw = new WeakMap<any, any>()
+// 用WeakMap 来储存 { raw <-> observed }(原始和处理过)的数据
+const rawToReactive = new WeakMap<any, any>() // 原始数据转响应式
+const reactiveToRaw = new WeakMap<any, any>() // 响应式转原始数据
+const rawToReadonly = new WeakMap<any, any>() // 原始数据转只读
+const readonlyToRaw = new WeakMap<any, any>() // 只读数据转原始数据
 
-// WeakSets for values that are marked readonly or non-reactive during
-// observable creation.
+// 只读的值
 const readonlyValues = new WeakSet<any>()
+// 不被响应化的值
 const nonReactiveValues = new WeakSet<any>()
-
+// 声明集合的类型
 const collectionTypes = new Set<Function>([Set, Map, WeakMap, WeakSet])
+// 用于检测可以观察的值
 const observableValueRE = /^\[object (?:Object|Array|Map|Set|WeakMap|WeakSet)\]$/
 
+// 判断一个值能不能被观察的方法
+// 1.不是vue实例 2.不是 VNode实例 3. 符合observableValueRE，4.不是不能观察的值
 const canObserve = (value: any): boolean => {
   return (
     !value._isVue &&
@@ -38,7 +39,7 @@ const canObserve = (value: any): boolean => {
   )
 }
 
-// only unwrap nested ref
+// 仅用于 unwrap 嵌套的ref类型
 type UnwrapNestedRefs<T> = T extends Ref ? T : UnwrapRef<T>
 
 export function reactive<T extends object>(target: T): UnwrapNestedRefs<T>
