@@ -44,14 +44,15 @@ type UnwrapNestedRefs<T> = T extends Ref ? T : UnwrapRef<T>
 
 export function reactive<T extends object>(target: T): UnwrapNestedRefs<T>
 export function reactive(target: object) {
-  // if trying to observe a readonly proxy, return the readonly version.
+  // 如果 target 是 readonly的值就直接返回
   if (readonlyToRaw.has(target)) {
     return target
   }
-  // target is explicitly marked as readonly by user
+  // 用户显式的标记为 readonly
   if (readonlyValues.has(target)) {
     return readonly(target)
   }
+  // 创建一个响应式的对象
   return createReactiveObject(
     target,
     rawToReactive,
@@ -61,11 +62,11 @@ export function reactive(target: object) {
   )
 }
 
+// 把一个对象设置成只读
 export function readonly<T extends object>(
   target: T
 ): Readonly<UnwrapNestedRefs<T>> {
-  // value is a mutable observable, retrieve its original and return
-  // a readonly version.
+  // target 可能已经被观察且是可变的，拿到原始的值并返回只读的版本
   if (reactiveToRaw.has(target)) {
     target = reactiveToRaw.get(target)
   }
@@ -78,6 +79,7 @@ export function readonly<T extends object>(
   )
 }
 
+// 创建一个响应式的对象
 function createReactiveObject(
   target: any,
   toProxy: WeakMap<any, any>,
@@ -85,54 +87,65 @@ function createReactiveObject(
   baseHandlers: ProxyHandler<any>,
   collectionHandlers: ProxyHandler<any>
 ) {
+  // 首先target必须是一个对象
   if (!isObject(target)) {
     if (__DEV__) {
       console.warn(`value cannot be made reactive: ${String(target)}`)
     }
     return target
   }
-  // target already has corresponding Proxy
+  // target 是observed前的数据，但是之前观察过，直接从缓存中取
   let observed = toProxy.get(target)
   if (observed !== void 0) {
     return observed
   }
-  // target is already a Proxy
+  // target 本身就是observed过的数据
   if (toRaw.has(target)) {
     return target
   }
-  // only a whitelist of value types can be observed.
+  // 只有 Object|Array|Map|Set|WeakMap|WeakSet 可以被观察
   if (!canObserve(target)) {
     return target
   }
+  // 根据类型选择， 集合类 还是 普通的 proxy 处理函数
   const handlers = collectionTypes.has(target.constructor)
     ? collectionHandlers
     : baseHandlers
+  // 把数据代理成proxy
   observed = new Proxy(target, handlers)
+  // 缓存转换前后的数据
   toProxy.set(target, observed)
   toRaw.set(observed, target)
+  // target 对应的依赖声明
   if (!targetMap.has(target)) {
     targetMap.set(target, new Map())
   }
+  // 返回 观察后的数据
   return observed
 }
 
+// 判断是否是响应式的数据
 export function isReactive(value: any): boolean {
   return reactiveToRaw.has(value) || readonlyToRaw.has(value)
 }
 
+// 判断是否是只读数据
 export function isReadonly(value: any): boolean {
   return readonlyToRaw.has(value)
 }
+
 // 将可响应数据转化为原始数据
 export function toRaw<T>(observed: T): T {
   return reactiveToRaw.get(observed) || readonlyToRaw.get(observed) || observed
 }
 
+// 标记该数据只读
 export function markReadonly<T>(value: T): T {
   readonlyValues.add(value)
   return value
 }
 
+// 标记该数据不需要响应式的值
 export function markNonReactive<T>(value: T): T {
   nonReactiveValues.add(value)
   return value
