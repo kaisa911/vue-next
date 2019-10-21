@@ -33,7 +33,8 @@ export interface DebuggerEvent {
   key: string | symbol | undefined
 }
 
-export const activeReactiveEffectStack: ReactiveEffect[] = [] // actice 的响应式effect栈
+// active 的响应式effect栈
+export const activeReactiveEffectStack: ReactiveEffect[] = []
 
 export const ITERATE_KEY = Symbol('iterate') // 可遍历的 key
 // 判断是否 effect
