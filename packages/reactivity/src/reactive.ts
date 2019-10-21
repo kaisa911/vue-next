@@ -1,14 +1,18 @@
 import { isObject, toTypeString } from '@vue/shared' // 两个方法，一个判断是否是对象，一个是判断类型的方法
+// 此处的handles最终会传递给Proxy(target, handle)的第二个参数
 import { mutableHandlers, readonlyHandlers } from './baseHandlers'
+// collections 指 Set, Map, WeakMap, WeakSet
 import {
   mutableCollectionHandlers,
   readonlyCollectionHandlers
 } from './collectionHandlers'
+// 被effect执行后返回的监听函数的类型
 import { ReactiveEffect } from './effect'
+// 范型类型
 import { UnwrapRef, Ref } from './ref'
 
 // WeakMap 用爱储存 {target -> key -> dep } 的连接
-// 理论上，依赖关系用类来维护更容易，但是这样做可以减少内存的使用
+// 理论上，依赖关系用类来维护更容易，但是这样做可以减少内存的开销
 export type Dep = Set<ReactiveEffect>
 export type KeyToDepMap = Map<string | symbol, Dep>
 export const targetMap = new WeakMap<any, KeyToDepMap>()
@@ -26,6 +30,7 @@ const nonReactiveValues = new WeakSet<any>()
 // 声明集合的类型
 const collectionTypes = new Set<Function>([Set, Map, WeakMap, WeakSet])
 // 用于检测可以观察的值
+// 用于正则判断是否符合可观察数据，object + array + collectionTypes
 const observableValueRE = /^\[object (?:Object|Array|Map|Set|WeakMap|WeakSet)\]$/
 
 // 判断一个值能不能被观察的方法
